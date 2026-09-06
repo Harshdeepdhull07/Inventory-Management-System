@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  STAFF
+}
+
+enum ItemStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum MovementType {
+  RECEIPT
+  ISSUE
+  TRANSFER
+  ADJUSTMENT
+}
+
+enum AlertStatus {
+  ACTIVE
+  DISMISSED
+  RESOLVED
+}
+
+model User {
+  id               String          @id @default(uuid())
+  email            String          @unique
+  password         String
+  name             String
+  role             Role            @default(STAFF)
+  assignedLocations UserLocation[]
+  movements        StockMovement[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Location {
+  id                   String          @id @default(uuid())
+  name                 String          @unique
+  code                 String          @unique
+  type                 String          @default("WAREHOUSE")
+  address              String?
+  isActive             Boolean         @default(true)
+  assignedUsers        UserLocation[]
+  sourceMovements      StockMovement[] @relation("SourceLocation")
+  destinationMovements StockMovement[] @relation("DestinationLocation")
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+}
+
+model UserLocation {
+  id         String   @id @default(uuid())
+  userId     String
+  locationId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@unique([userId, locationId])
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  items       Item[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Item {
+  id           String          @id @default(uuid())
+  sku          String          @unique
+  name         String
+  description  String?
+  unit         String          @default("pcs")
+  reorderLevel Int             @default(10)
+  categoryId   String
+  category     Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  status       ItemStatus      @default(ACTIVE)
+  movements    StockMovement[]
+  alerts       LowStockAlert[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([sku])
+  @@index([categoryId])
+  @@index([status])
+}
+
+model StockMovement {
+  id                    String       @id @default(uuid())
+  itemId                String
+  item                  Item         @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  type                  MovementType
+  quantity              Int
+  sourceLocationId      String?
+  sourceLocation        Location?    @relation("SourceLocation", fields: [sourceLocationId], references: [id], onDelete: SetNull)
+  destinationLocationId String?
+  destinationLocation   Location?    @relation("DestinationLocation", fields: [destinationLocationId], references: [id], onDelete: SetNull)
+  userId                String
+  user                  User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  reference             String?
+  notes                 String?
+  createdAt             DateTime     @default(now())
+
+  @@index([itemId])
+  @@index([type])
+  @@index([sourceLocationId])
+  @@index([destinationLocationId])
+  @@index([createdAt])
+}
+
+model LowStockAlert {
+  id           String      @id @default(uuid())
+  itemId       String
+  item         Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  locationId   String?
+  currentStock Int
+  reorderLevel Int
+  status       AlertStatus @default(ACTIVE)
+  dismissedBy  String?
+  dismissedAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([itemId])
+  @@index([status])
+}
