@@ -15,6 +15,7 @@ model User {
   role              String          @default("STAFF")
   assignedLocations UserLocation[]
   movements         StockMovement[]
+  auditLogs         ItemAuditLog[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 }
@@ -64,6 +65,7 @@ model Item {
   category     Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   status       String          @default("ACTIVE")
   movements    StockMovement[]
+  auditLogs    ItemAuditLog[]
   alerts       LowStockAlert[]
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
@@ -93,6 +95,23 @@ model StockMovement {
   @@index([type])
   @@index([sourceLocationId])
   @@index([destinationLocationId])
+  @@index([createdAt])
+}
+
+model ItemAuditLog {
+  id        String   @id @default(uuid())
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  type      String   // "CREATED" | "FIELD_CHANGE" | "NOTE" | "STATUS_CHANGE"
+  fieldName String?
+  oldValue  String?
+  newValue  String?
+  note      String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+
+  @@index([itemId])
   @@index([createdAt])
 }
 

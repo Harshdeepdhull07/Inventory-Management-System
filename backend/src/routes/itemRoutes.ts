@@ -7,6 +7,7 @@ import {
   archiveItem,
   restoreItem,
   getItemTimeline,
+  addItemNote,
 } from '../controllers/itemController.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireManager } from '../middleware/role.js';
@@ -18,6 +19,7 @@ router.use(authenticate);
 router.get('/', listInventory);
 router.get('/:id', getItemById);
 router.get('/:id/timeline', getItemTimeline);
+router.post('/:id/notes', addItemNote);
 
 router.post('/', requireManager, createItem);
 router.put('/:id', requireManager, updateItem);

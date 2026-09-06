@@ -10,10 +10,15 @@ import {
   Repeat,
   Sliders,
   Calendar,
-  Loader2
+  Loader2,
+  MessageSquarePlus,
+  Edit3,
+  PlusCircle,
+  Archive,
+  RotateCcw
 } from 'lucide-react';
 import api from '../api/client.js';
-import { Item, StockMovement } from '../types/index.js';
+import { Item, Role } from '../types/index.js';
 import { ReceiptModal } from '../components/modals/ReceiptModal.js';
 import { IssueModal } from '../components/modals/IssueModal.js';
 import { TransferModal } from '../components/modals/TransferModal.js';
@@ -31,14 +36,42 @@ interface ItemDetailData extends Item {
   totalStock: number;
 }
 
+interface TimelineEvent {
+  id: string;
+  eventKind: 'MOVEMENT' | 'AUDIT';
+  type: string;
+  quantity?: number;
+  delta?: number;
+  balanceAfter?: number;
+  sourceLocation?: { name: string; code: string } | null;
+  destinationLocation?: { name: string; code: string } | null;
+  reference?: string | null;
+  notes?: string | null;
+  fieldName?: string | null;
+  oldValue?: string | null;
+  newValue?: string | null;
+  note?: string | null;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    role: Role;
+  };
+  createdAt: string;
+}
+
 export const ItemDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { isManager } = useAuth();
   const [itemData, setItemData] = useState<ItemDetailData | null>(null);
-  const [timeline, setTimeline] = useState<StockMovement[]>([]);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Modals
+  // Note form state
+  const [newNote, setNewNote] = useState<string>('');
+  const [addingNote, setAddingNote] = useState<boolean>(false);
+
+  // Movement Modals
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [issueOpen, setIssueOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
@@ -65,6 +98,22 @@ export const ItemDetail: React.FC = () => {
     fetchDetails();
   }, [id]);
 
+  const handleAddNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNote.trim() || !id) return;
+
+    try {
+      setAddingNote(true);
+      await api.post(`/items/${id}/notes`, { note: newNote.trim() });
+      setNewNote('');
+      fetchDetails();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to add note');
+    } finally {
+      setAddingNote(false);
+    }
+  };
+
   if (loading || !itemData) {
     return (
       <div className="h-96 flex items-center justify-center space-x-3 text-slate-400">
@@ -78,6 +127,7 @@ export const ItemDetail: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Navigation & Header */}
       <div className="flex items-center justify-between">
         <Link
           to="/inventory"
@@ -121,6 +171,7 @@ export const ItemDetail: React.FC = () => {
         </div>
       </div>
 
+      {/* Item Overview Card */}
       <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div className="space-y-2">
@@ -169,6 +220,7 @@ export const ItemDetail: React.FC = () => {
         </div>
       </div>
 
+      {/* Multi-Location Stock Distribution */}
       <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5">
         <div className="flex items-center space-x-2 mb-4 text-slate-200 font-bold">
           <Warehouse className="w-5 h-5 text-sky-400" />
@@ -202,38 +254,93 @@ export const ItemDetail: React.FC = () => {
         </div>
       </div>
 
+      {/* Add Immutable Staff Note Box */}
+      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5">
+        <div className="flex items-center space-x-2 mb-3 text-slate-200 font-bold">
+          <MessageSquarePlus className="w-5 h-5 text-sky-400" />
+          <h2>Append Staff Note to History</h2>
+        </div>
+        <p className="text-xs text-slate-400 mb-3">
+          Notes become a permanent part of this item's un-editable audit timeline alongside field edits and movements.
+        </p>
+        <form onSubmit={handleAddNote} className="flex gap-3">
+          <input
+            type="text"
+            placeholder="e.g. Inspected shipment, batch #99 confirmed in good order, packaging damaged during unload..."
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500"
+            required
+          />
+          <button
+            type="submit"
+            disabled={addingNote || !newNote.trim()}
+            className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-sm font-semibold flex items-center space-x-2 transition-colors disabled:opacity-50"
+          >
+            {addingNote ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Post Note</span>}
+          </button>
+        </form>
+      </div>
+
+      {/* Complete Immutable History Timeline */}
       <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2 text-slate-200 font-bold">
             <History className="w-5 h-5 text-indigo-400" />
-            <h2>Immutable Item Ledger Audit Trail</h2>
+            <h2>Complete Immutable Item History Timeline</h2>
           </div>
           <span className="text-xs font-mono text-slate-400">
-            {timeline.length} Recorded Ledger Transactions
+            {timeline.length} Permanent Records
           </span>
         </div>
 
         <div className="relative pl-6 border-l-2 border-slate-700 space-y-6">
-          {timeline.map((m) => {
+          {timeline.map((event) => {
             let badgeColor = '';
             let icon = null;
+            let title = '';
 
-            if (m.type === 'RECEIPT') {
-              badgeColor = 'bg-emerald-500 text-white';
-              icon = <ArrowDownToLine className="w-3.5 h-3.5" />;
-            } else if (m.type === 'ISSUE') {
-              badgeColor = 'bg-rose-500 text-white';
-              icon = <ArrowUpFromLine className="w-3.5 h-3.5" />;
-            } else if (m.type === 'TRANSFER') {
-              badgeColor = 'bg-indigo-500 text-white';
-              icon = <Repeat className="w-3.5 h-3.5" />;
+            if (event.eventKind === 'MOVEMENT') {
+              if (event.type === 'RECEIPT') {
+                badgeColor = 'bg-emerald-500 text-white';
+                icon = <ArrowDownToLine className="w-3.5 h-3.5" />;
+                title = 'Stock Receipt (Inbound)';
+              } else if (event.type === 'ISSUE') {
+                badgeColor = 'bg-rose-500 text-white';
+                icon = <ArrowUpFromLine className="w-3.5 h-3.5" />;
+                title = 'Stock Issue (Outbound)';
+              } else if (event.type === 'TRANSFER') {
+                badgeColor = 'bg-indigo-500 text-white';
+                icon = <Repeat className="w-3.5 h-3.5" />;
+                title = 'Inter-Location Transfer';
+              } else {
+                badgeColor = 'bg-amber-500 text-white';
+                icon = <Sliders className="w-3.5 h-3.5" />;
+                title = 'Stock Adjustment';
+              }
             } else {
-              badgeColor = 'bg-amber-500 text-white';
-              icon = <Sliders className="w-3.5 h-3.5" />;
+              // Audit Logs
+              if (event.type === 'CREATED') {
+                badgeColor = 'bg-sky-500 text-white';
+                icon = <PlusCircle className="w-3.5 h-3.5" />;
+                title = 'Item Created';
+              } else if (event.type === 'FIELD_CHANGE') {
+                badgeColor = 'bg-cyan-500 text-white';
+                icon = <Edit3 className="w-3.5 h-3.5" />;
+                title = `Field Updated: ${event.fieldName}`;
+              } else if (event.type === 'NOTE') {
+                badgeColor = 'bg-purple-500 text-white';
+                icon = <MessageSquarePlus className="w-3.5 h-3.5" />;
+                title = 'Staff Note Recorded';
+              } else {
+                badgeColor = 'bg-orange-500 text-white';
+                icon = event.note?.includes('archived') ? <Archive className="w-3.5 h-3.5" /> : <RotateCcw className="w-3.5 h-3.5" />;
+                title = 'Status Change';
+              }
             }
 
             return (
-              <div key={m.id} className="relative group">
+              <div key={event.id} className="relative group">
                 <div
                   className={`absolute -left-[31px] top-1.5 w-6 h-6 rounded-full ${badgeColor} flex items-center justify-center shadow-lg`}
                 >
@@ -244,57 +351,75 @@ export const ItemDetail: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center space-x-2">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                        {m.type}
+                        {title}
                       </span>
-                      {m.reference && (
+                      {event.reference && (
                         <span className="text-xs font-mono text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/40">
-                          {m.reference}
+                          {event.reference}
                         </span>
                       )}
                     </div>
                     <div className="text-xs text-slate-400 font-mono flex items-center space-x-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      <span>{new Date(m.createdAt).toLocaleString()}</span>
+                      <span>{new Date(event.createdAt).toLocaleString()}</span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-                    <div>
-                      <span className="text-slate-400">Movement Details:</span>
-                      <div className="font-semibold text-slate-200 mt-0.5">
-                        {m.type === 'TRANSFER'
-                          ? `${m.sourceLocation?.name} → ${m.destinationLocation?.name}`
-                          : m.destinationLocation
-                          ? `Into ${m.destinationLocation.name}`
-                          : m.sourceLocation
-                          ? `From ${m.sourceLocation.name}`
-                          : 'Global Adjustment'}
+                  {/* Movement Details */}
+                  {event.eventKind === 'MOVEMENT' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
+                      <div>
+                        <span className="text-slate-400">Movement Route:</span>
+                        <div className="font-semibold text-slate-200 mt-0.5">
+                          {event.type === 'TRANSFER'
+                            ? `${event.sourceLocation?.name} → ${event.destinationLocation?.name}`
+                            : event.destinationLocation
+                            ? `Into ${event.destinationLocation.name}`
+                            : event.sourceLocation
+                            ? `From ${event.sourceLocation.name}`
+                            : 'Global Adjustment'}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-slate-400">Quantity Delta:</span>
+                        <div className="font-mono font-bold text-sm text-slate-100 mt-0.5">
+                          {event.type === 'ISSUE' ? `-${event.quantity}` : event.type === 'ADJUSTMENT' ? (event.quantity! > 0 ? `+${event.quantity}` : `${event.quantity}`) : `+${event.quantity}`} {itemData.unit}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-slate-400">Ledger Balance After:</span>
+                        <div className="font-mono font-bold text-sm text-emerald-400 mt-0.5">
+                          {event.balanceAfter ?? '—'} {itemData.unit}
+                        </div>
                       </div>
                     </div>
+                  )}
 
-                    <div>
-                      <span className="text-slate-400">Quantity Delta:</span>
-                      <div className="font-mono font-bold text-sm text-slate-100 mt-0.5">
-                        {m.type === 'ISSUE' ? `-${m.quantity}` : m.type === 'ADJUSTMENT' ? (m.quantity > 0 ? `+${m.quantity}` : `${m.quantity}`) : `+${m.quantity}`} {itemData.unit}
-                      </div>
+                  {/* Field Change Audit Details */}
+                  {event.eventKind === 'AUDIT' && event.type === 'FIELD_CHANGE' && (
+                    <div className="pt-2 text-xs flex items-center space-x-2">
+                      <span className="text-slate-400">Modified:</span>
+                      <span className="line-through text-rose-400/80 bg-rose-950/30 px-2 py-0.5 rounded border border-rose-900/40 font-mono">
+                        {event.oldValue}
+                      </span>
+                      <span className="text-slate-500">→</span>
+                      <span className="text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-900/40 font-mono font-semibold">
+                        {event.newValue}
+                      </span>
                     </div>
+                  )}
 
-                    <div>
-                      <span className="text-slate-400">Balance After Transaction:</span>
-                      <div className="font-mono font-bold text-sm text-emerald-400 mt-0.5">
-                        {m.balanceAfter ?? '—'} {itemData.unit}
-                      </div>
-                    </div>
-                  </div>
-
-                  {m.notes && (
+                  {/* Notes / Remarks */}
+                  {(event.notes || event.note) && (
                     <div className="pt-2 border-t border-slate-800 text-xs text-slate-300 italic">
-                      "{m.notes}"
+                      "{event.notes || event.note}"
                     </div>
                   )}
 
                   <div className="pt-1 text-[11px] text-slate-500">
-                    Logged by <span className="text-slate-400 font-medium">{m.user?.name}</span> ({m.user?.role})
+                    Recorded by <span className="text-slate-400 font-medium">{event.user?.name}</span> ({event.user?.role})
                   </div>
                 </div>
               </div>
@@ -303,6 +428,7 @@ export const ItemDetail: React.FC = () => {
         </div>
       </div>
 
+      {/* Movement Modals */}
       {receiptOpen && (
         <ReceiptModal
           isOpen={receiptOpen}

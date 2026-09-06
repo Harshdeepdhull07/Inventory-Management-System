@@ -14,6 +14,10 @@ const itemSchema = z.object({
   categoryId: z.string().min(1, 'Category is required'),
 });
 
+const noteSchema = z.object({
+  note: z.string().min(1, 'Note content is required'),
+});
+
 export const listInventory = async (req: Request, res: Response): Promise<void> => {
   const {
     search,
@@ -167,6 +171,16 @@ export const createItem = async (req: Request, res: Response): Promise<void> => 
     },
   });
 
+  // Log Immutable Creation Event
+  await prisma.itemAuditLog.create({
+    data: {
+      itemId: item.id,
+      type: 'CREATED',
+      note: `Item created with SKU '${item.sku}', Name '${item.name}', Reorder Level ${item.reorderLevel} ${item.unit}.`,
+      userId: req.user!.id,
+    },
+  });
+
   res.status(201).json({ success: true, data: item });
 };
 
@@ -174,7 +188,47 @@ export const updateItem = async (req: Request, res: Response): Promise<void> => 
   const { id } = req.params;
   const { sku, name, description, unit, reorderLevel, categoryId } = itemSchema.parse(req.body);
 
-  const item = await prisma.item.update({
+  const existingItem = await prisma.item.findUnique({
+    where: { id },
+    include: { category: true },
+  });
+
+  if (!existingItem) {
+    res.status(404).json({ success: false, message: 'Item not found' });
+    return;
+  }
+
+  const newCategory = await prisma.category.findUnique({ where: { id: categoryId } });
+
+  // Record audit logs for any changed fields
+  const fieldChanges: { fieldName: string; oldValue: string; newValue: string }[] = [];
+
+  if (existingItem.name !== name.trim()) {
+    fieldChanges.push({ fieldName: 'Name', oldValue: existingItem.name, newValue: name.trim() });
+  }
+  if (existingItem.categoryId !== categoryId) {
+    fieldChanges.push({
+      fieldName: 'Category',
+      oldValue: existingItem.category.name,
+      newValue: newCategory?.name || categoryId,
+    });
+  }
+  if (existingItem.reorderLevel !== reorderLevel) {
+    fieldChanges.push({
+      fieldName: 'Reorder Level',
+      oldValue: existingItem.reorderLevel.toString(),
+      newValue: reorderLevel.toString(),
+    });
+  }
+  if (existingItem.unit !== (unit.trim() || 'pcs')) {
+    fieldChanges.push({
+      fieldName: 'Unit of Measure',
+      oldValue: existingItem.unit,
+      newValue: unit.trim() || 'pcs',
+    });
+  }
+
+  const updatedItem = await prisma.item.update({
     where: { id },
     data: {
       sku: sku.toUpperCase().trim(),
@@ -189,16 +243,61 @@ export const updateItem = async (req: Request, res: Response): Promise<void> => 
     },
   });
 
+  // Commit audit entries for each changed field
+  for (const change of fieldChanges) {
+    await prisma.itemAuditLog.create({
+      data: {
+        itemId: id,
+        type: 'FIELD_CHANGE',
+        fieldName: change.fieldName,
+        oldValue: change.oldValue,
+        newValue: change.newValue,
+        userId: req.user!.id,
+      },
+    });
+  }
+
   const totalStock = await LedgerService.getItemTotalStock(id);
-  const isLowStock = totalStock <= item.reorderLevel;
+  const isLowStock = totalStock <= updatedItem.reorderLevel;
 
   res.status(200).json({
     success: true,
     data: {
-      ...item,
+      ...updatedItem,
       currentStock: totalStock,
       isLowStock,
     },
+  });
+};
+
+export const addItemNote = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { note } = noteSchema.parse(req.body);
+
+  const item = await prisma.item.findUnique({ where: { id } });
+  if (!item) {
+    res.status(404).json({ success: false, message: 'Item not found' });
+    return;
+  }
+
+  const auditLog = await prisma.itemAuditLog.create({
+    data: {
+      itemId: id,
+      type: 'NOTE',
+      note: note.trim(),
+      userId: req.user!.id,
+    },
+    include: {
+      user: {
+        select: { id: true, name: true, email: true, role: true },
+      },
+    },
+  });
+
+  res.status(201).json({
+    success: true,
+    message: 'Staff note recorded permanently on item timeline.',
+    data: auditLog,
   });
 };
 
@@ -208,6 +307,15 @@ export const archiveItem = async (req: Request, res: Response): Promise<void> =>
   const item = await prisma.item.update({
     where: { id },
     data: { status: ItemStatus.ARCHIVED },
+  });
+
+  await prisma.itemAuditLog.create({
+    data: {
+      itemId: id,
+      type: 'STATUS_CHANGE',
+      note: `Item archived. New stock movements blocked.`,
+      userId: req.user!.id,
+    },
   });
 
   res.status(200).json({
@@ -223,6 +331,15 @@ export const restoreItem = async (req: Request, res: Response): Promise<void> =>
   const item = await prisma.item.update({
     where: { id },
     data: { status: ItemStatus.ACTIVE },
+  });
+
+  await prisma.itemAuditLog.create({
+    data: {
+      itemId: id,
+      type: 'STATUS_CHANGE',
+      note: `Item restored to active operational status.`,
+      userId: req.user!.id,
+    },
   });
 
   res.status(200).json({
@@ -245,20 +362,32 @@ export const getItemTimeline = async (req: Request, res: Response): Promise<void
     return;
   }
 
-  const movements = await prisma.stockMovement.findMany({
-    where: { itemId: id },
-    include: {
-      sourceLocation: true,
-      destinationLocation: true,
-      user: {
-        select: { id: true, name: true, email: true, role: true },
+  const [movements, auditLogs] = await Promise.all([
+    prisma.stockMovement.findMany({
+      where: { itemId: id },
+      include: {
+        sourceLocation: true,
+        destinationLocation: true,
+        user: {
+          select: { id: true, name: true, email: true, role: true },
+        },
       },
-    },
-    orderBy: { createdAt: 'asc' },
-  });
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.itemAuditLog.findMany({
+      where: { itemId: id },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, role: true },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    }),
+  ]);
 
+  // Merge movements and audit logs into a unified timeline
   let runningTotalBalance = 0;
-  const timeline = movements.map((m) => {
+  const movementEvents = movements.map((m: any) => {
     let delta = 0;
     if (m.type === 'RECEIPT') delta = m.quantity;
     else if (m.type === 'ISSUE') delta = -m.quantity;
@@ -268,20 +397,43 @@ export const getItemTimeline = async (req: Request, res: Response): Promise<void
     runningTotalBalance += delta;
 
     return {
-      ...m,
+      id: m.id,
+      eventKind: 'MOVEMENT',
+      type: m.type,
+      quantity: m.quantity,
       delta,
       balanceAfter: runningTotalBalance,
+      sourceLocation: m.sourceLocation,
+      destinationLocation: m.destinationLocation,
+      reference: m.reference,
+      notes: m.notes,
+      user: m.user,
+      createdAt: m.createdAt,
     };
   });
 
-  timeline.reverse();
+  const auditEvents = auditLogs.map((log: any) => ({
+    id: log.id,
+    eventKind: 'AUDIT',
+    type: log.type,
+    fieldName: log.fieldName,
+    oldValue: log.oldValue,
+    newValue: log.newValue,
+    note: log.note,
+    user: log.user,
+    createdAt: log.createdAt,
+  }));
+
+  const combinedTimeline = [...movementEvents, ...auditEvents].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
   res.status(200).json({
     success: true,
     data: {
       item,
       currentTotalStock: runningTotalBalance,
-      timeline,
+      timeline: combinedTimeline,
     },
   });
 };
