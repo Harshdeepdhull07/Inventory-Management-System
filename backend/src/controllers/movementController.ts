@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../utils/prisma.js';
 import { LedgerService } from '../services/ledgerService.js';
-import { MovementType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 const receiptSchema = z.object({
   itemId: z.string().min(1, 'Item ID is required'),
@@ -132,7 +132,7 @@ export const listMovements = async (req: Request, res: Response): Promise<void> 
   const where: Prisma.StockMovementWhereInput = {};
 
   if (itemId) where.itemId = itemId;
-  if (type) where.type = type as MovementType;
+  if (type) where.type = type;
 
   if (locationId) {
     where.OR = [

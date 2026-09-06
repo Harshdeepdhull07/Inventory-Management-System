@@ -4,13 +4,13 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { prisma } from '../utils/prisma.js';
 import { config } from '../config/index.js';
-import { Role } from '@prisma/client';
+import { Role } from '../types/enums.js';
 
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(2),
-  role: z.nativeEnum(Role).default(Role.STAFF),
+  role: z.enum(['MANAGER', 'STAFF']).default('STAFF'),
 });
 
 const loginSchema = z.object({

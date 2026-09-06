@@ -1,12 +1,12 @@
-import { PrismaClient, Role, ItemStatus, MovementType } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { Role, MovementType, ItemStatus } from '../src/types/enums.js';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Starting comprehensive database seed for BUSY Stock Control System...');
 
-  // Clean existing tables (in proper foreign-key order)
   await prisma.lowStockAlert.deleteMany();
   await prisma.stockMovement.deleteMany();
   await prisma.userLocation.deleteMany();
@@ -17,7 +17,6 @@ async function main() {
 
   console.log('🧹 Cleaned previous records.');
 
-  // 1. Create Users
   const passwordHash = await bcrypt.hash('Manager@123', 10);
   const staffPasswordHash = await bcrypt.hash('Staff@123', 10);
 
@@ -53,7 +52,6 @@ async function main() {
   console.log('   - Staff: staff@inventory.com / Staff@123');
   console.log('   - Staff 2: staff2@inventory.com / Staff@123');
 
-  // 2. Create Locations
   const locMain = await prisma.location.create({
     data: {
       name: 'Central Warehouse',
@@ -90,7 +88,6 @@ async function main() {
     },
   });
 
-  // Assign staff to locations
   await prisma.userLocation.createMany({
     data: [
       { userId: staff1.id, locationId: locMain.id },
@@ -102,7 +99,6 @@ async function main() {
 
   console.log('📍 Created Locations & Staff Assignment Matrix.');
 
-  // 3. Create Categories
   const catElectronics = await prisma.category.create({
     data: { name: 'Electronics', description: 'Computing, peripherals, monitors, and networking equipment' },
   });
@@ -121,7 +117,6 @@ async function main() {
 
   console.log('🏷️ Created 5 Item Categories.');
 
-  // 4. Create Items
   const itemsData = [
     { sku: 'ELEC-KB-001', name: 'Mechanical Keyboard (RGB Brown Switch)', unit: 'pcs', reorderLevel: 25, categoryId: catElectronics.id, description: 'Hot-swappable USB-C mechanical keyboard with PBT keycaps' },
     { sku: 'ELEC-MS-002', name: 'Wireless Ergonomic Laser Mouse', unit: 'pcs', reorderLevel: 30, categoryId: catElectronics.id, description: 'Rechargeable multi-device Bluetooth mouse' },
@@ -150,13 +145,10 @@ async function main() {
 
   console.log(`📦 Created ${itemsData.length} Items across categories.`);
 
-  // 5. Build Append-Only Stock Ledger Movements
-  // Simulating historical receipts, transfers, and issues over the past weeks
   const now = Date.now();
   const oneDay = 24 * 60 * 60 * 1000;
 
   const movements = [
-    // --- RECEIPTS TO CENTRAL WAREHOUSE ---
     { sku: 'ELEC-KB-001', type: MovementType.RECEIPT, qty: 150, dest: locMain.id, user: staff1.id, ref: 'PO-2026-0810', notes: 'Supplier delivery batch #1', daysAgo: 35 },
     { sku: 'ELEC-MS-002', type: MovementType.RECEIPT, qty: 200, dest: locMain.id, user: staff1.id, ref: 'PO-2026-0811', notes: 'Supplier delivery batch #1', daysAgo: 35 },
     { sku: 'ELEC-MN-003', type: MovementType.RECEIPT, qty: 40, dest: locMain.id, user: staff1.id, ref: 'PO-2026-0812', notes: 'Monitors inbound direct import', daysAgo: 30 },
@@ -173,7 +165,6 @@ async function main() {
     { sku: 'RAW-ALU-401', type: MovementType.RECEIPT, qty: 100, dest: locMain.id, user: staff1.id, ref: 'PO-2026-0830', notes: 'Aluminum rails bundle', daysAgo: 15 },
     { sku: 'RAW-BLT-402', type: MovementType.RECEIPT, qty: 150, dest: locMain.id, user: staff1.id, ref: 'PO-2026-0831', notes: 'Fasteners cartons', daysAgo: 15 },
 
-    // --- TRANSFERS FROM MAIN WAREHOUSE TO RETAIL STORES & NORTH HUB ---
     { sku: 'ELEC-KB-001', type: MovementType.TRANSFER, qty: 30, src: locMain.id, dest: locStore1.id, user: staff1.id, ref: 'TR-2026-0901', notes: 'Store 101 stock replenishment', daysAgo: 14 },
     { sku: 'ELEC-KB-001', type: MovementType.TRANSFER, qty: 25, src: locMain.id, dest: locStore2.id, user: staff1.id, ref: 'TR-2026-0902', notes: 'Store 102 stock replenishment', daysAgo: 14 },
     { sku: 'ELEC-MS-002', type: MovementType.TRANSFER, qty: 45, src: locMain.id, dest: locStore1.id, user: staff1.id, ref: 'TR-2026-0903', notes: 'Transfer to CP Store', daysAgo: 12 },
@@ -181,7 +172,6 @@ async function main() {
     { sku: 'OFF-PPR-101', type: MovementType.TRANSFER, qty: 50, src: locMain.id, dest: locStore1.id, user: staff1.id, ref: 'TR-2026-0905', notes: 'Store replenishment', daysAgo: 9 },
     { sku: 'PACK-BOX-301', type: MovementType.TRANSFER, qty: 60, src: locNorth.id, dest: locMain.id, user: staff2.id, ref: 'TR-2026-0906', notes: 'Inter-warehouse balancing', daysAgo: 8 },
 
-    // --- ISSUES / FULFILLMENTS ---
     { sku: 'ELEC-KB-001', type: MovementType.ISSUE, qty: 28, src: locStore1.id, user: staff1.id, ref: 'SO-CP-4401', notes: 'Customer sales orders', daysAgo: 6 },
     { sku: 'ELEC-KB-001', type: MovementType.ISSUE, qty: 20, src: locStore2.id, user: staff2.id, ref: 'SO-CYBER-882', notes: 'Corporate office setup order', daysAgo: 5 },
     { sku: 'ELEC-MS-002', type: MovementType.ISSUE, qty: 40, src: locStore1.id, user: staff1.id, ref: 'SO-CP-4405', notes: 'Bulk peripheral sale', daysAgo: 4 },
@@ -189,7 +179,6 @@ async function main() {
     { sku: 'OFF-PPR-101', type: MovementType.ISSUE, qty: 45, src: locStore1.id, user: staff1.id, ref: 'SO-CP-4412', notes: 'Law firm quarterly contract', daysAgo: 2 },
     { sku: 'FURN-DSK-202', type: MovementType.ISSUE, qty: 17, src: locMain.id, user: manager.id, ref: 'SO-HQ-1092', notes: 'Delivered to tech startup HQ', daysAgo: 1 },
 
-    // --- STOCK ADJUSTMENT (Manager Reconciliation) ---
     { sku: 'ELEC-MN-003', type: MovementType.ADJUSTMENT, qty: -1, dest: locMain.id, user: manager.id, ref: 'AUDIT-DAMAGED-01', notes: '1 unit damaged during forklift movement, written off per audit policy', daysAgo: 2 },
     { sku: 'RAW-BLT-402', type: MovementType.ADJUSTMENT, qty: 5, dest: locMain.id, user: manager.id, ref: 'AUDIT-FOUND-02', notes: 'Physical count found 5 extra boxes from unrecorded vendor return', daysAgo: 1 },
   ];
@@ -205,8 +194,8 @@ async function main() {
         itemId: item.id,
         type: m.type,
         quantity: m.qty,
-        sourceLocationId: m.src || null,
-        destinationLocationId: m.dest || null,
+        sourceLocationId: (m as any).src || null,
+        destinationLocationId: (m as any).dest || null,
         userId: m.user,
         reference: m.ref || null,
         notes: m.notes || null,
@@ -217,7 +206,6 @@ async function main() {
 
   console.log(`📜 Recorded ${movements.length} Append-Only Stock Movements.`);
 
-  // 6. Generate Initial Low-Stock Alerts for items below threshold
   const allItems = await prisma.item.findMany();
   for (const item of allItems) {
     const itemMovements = await prisma.stockMovement.findMany({ where: { itemId: item.id } });

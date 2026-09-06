@@ -1,23 +1,9 @@
 import { prisma } from '../utils/prisma.js';
-import { MovementType, ItemStatus, Prisma } from '@prisma/client';
+import { MovementType, ItemStatus } from '../types/enums.js';
 import { AlertService } from './alertService.js';
-
-export interface MovementInput {
-  itemId: string;
-  type: MovementType;
-  quantity: number;
-  sourceLocationId?: string | null;
-  destinationLocationId?: string | null;
-  userId: string;
-  reference?: string | null;
-  notes?: string | null;
-}
+import { Prisma } from '@prisma/client';
 
 export class LedgerService {
-  /**
-   * Pure Append-Only Ledger Stock Calculation for a specific item at a specific location:
-   * Stock = Receipts (at Loc) - Issues (at Loc) + Transfers In (to Loc) - Transfers Out (from Loc) + Adjustments (at Loc)
-   */
   static async getItemStockAtLocation(
     itemId: string,
     locationId: string,
@@ -53,7 +39,6 @@ export class LedgerService {
           stock -= m.quantity;
         }
       } else if (m.type === MovementType.ADJUSTMENT && m.destinationLocationId === locationId) {
-        // Adjustment quantity can be positive or negative
         stock += m.quantity;
       }
     }
@@ -61,9 +46,6 @@ export class LedgerService {
     return stock;
   }
 
-  /**
-   * Calculates total global stock for an item across all locations
-   */
   static async getItemTotalStock(
     itemId: string,
     tx: Prisma.TransactionClient | typeof prisma = prisma
@@ -85,15 +67,11 @@ export class LedgerService {
       } else if (m.type === MovementType.ADJUSTMENT) {
         stock += m.quantity;
       }
-      // Note: Transfers do not change total global quantity across all locations
     }
 
     return stock;
   }
 
-  /**
-   * Get stock breakdown across all locations for an item
-   */
   static async getItemStockBreakdown(itemId: string) {
     const locations = await prisma.location.findMany({
       where: { isActive: true },
@@ -121,9 +99,6 @@ export class LedgerService {
     };
   }
 
-  /**
-   * Creates a Stock Receipt (Incoming stock to a location)
-   */
   static async recordReceipt(data: {
     itemId: string;
     destinationLocationId: string;
@@ -169,16 +144,12 @@ export class LedgerService {
       },
     });
 
-    // Evaluate alert status
     const totalStock = await this.getItemTotalStock(data.itemId);
     await AlertService.evaluateItemStockAlert(data.itemId, totalStock);
 
     return movement;
   }
 
-  /**
-   * Creates a Stock Issue (Outgoing stock from a location) with strict sufficiency check
-   */
   static async recordIssue(data: {
     itemId: string;
     sourceLocationId: string;
@@ -207,7 +178,6 @@ export class LedgerService {
       throw new Error('Source location not found or inactive.');
     }
 
-    // Execute in a single transactional lock
     const result = await prisma.$transaction(async (tx) => {
       const currentStock = await this.getItemStockAtLocation(data.itemId, data.sourceLocationId, tx);
 
@@ -243,9 +213,6 @@ export class LedgerService {
     return result;
   }
 
-  /**
-   * Creates an Atomic Stock Transfer between locations
-   */
   static async recordTransfer(data: {
     itemId: string;
     sourceLocationId: string;
@@ -284,7 +251,6 @@ export class LedgerService {
       throw new Error('Destination location not found or inactive.');
     }
 
-    // Atomic transaction: verify source stock then create movement
     const movement = await prisma.$transaction(async (tx) => {
       const sourceStock = await this.getItemStockAtLocation(data.itemId, data.sourceLocationId, tx);
 
@@ -317,9 +283,6 @@ export class LedgerService {
     return movement;
   }
 
-  /**
-   * Creates a Stock Adjustment (Manager-only stock reconciliation with delta and reason)
-   */
   static async recordAdjustment(data: {
     itemId: string;
     locationId: string;
@@ -352,7 +315,6 @@ export class LedgerService {
       throw new Error('Location not found or inactive.');
     }
 
-    // Ensure adjustment doesn't result in negative stock at location
     const movement = await prisma.$transaction(async (tx) => {
       const currentStock = await this.getItemStockAtLocation(data.itemId, data.locationId, tx);
       const projectedStock = currentStock + data.deltaQuantity;

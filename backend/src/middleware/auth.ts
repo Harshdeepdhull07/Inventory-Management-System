@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/index.js';
 import { prisma } from '../utils/prisma.js';
-import { Role } from '@prisma/client';
+import { Role } from '../types/enums.js';
 
 export interface AuthUser {
   id: string;
@@ -58,7 +58,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: user.role as Role,
       assignedLocationIds: user.assignedLocations.map((loc) => loc.locationId),
     };
 

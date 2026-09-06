@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { Role } from '@prisma/client';
+import { Role } from '../types/enums.js';
 
 export const requireManager = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user) {
@@ -25,7 +25,6 @@ export const requireLocationAccess = (locationIdExtractor: (req: Request) => str
       return;
     }
 
-    // Managers have global access to all locations
     if (req.user.role === Role.MANAGER) {
       return next();
     }
@@ -37,7 +36,6 @@ export const requireLocationAccess = (locationIdExtractor: (req: Request) => str
 
     const ids = Array.isArray(locationIdsToCheck) ? locationIdsToCheck : [locationIdsToCheck];
     
-    // Check if staff has access to all requested locations
     const hasAccess = ids.every((id) => req.user!.assignedLocationIds.includes(id));
 
     if (!hasAccess) {

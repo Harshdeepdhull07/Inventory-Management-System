@@ -3,7 +3,7 @@ import csvParser from 'csv-parser';
 import * as fastCsv from 'fast-csv';
 import { prisma } from '../utils/prisma.js';
 import { LedgerService } from './ledgerService.js';
-import { ItemStatus } from '@prisma/client';
+import { ItemStatus } from '../types/enums.js';
 
 export interface RowImportResult {
   rowNumber: number;
@@ -13,9 +13,6 @@ export interface RowImportResult {
 }
 
 export class CsvService {
-  /**
-   * Parse CSV Buffer into array of key-value records
-   */
   static parseCsvBuffer(buffer: Buffer): Promise<Record<string, string>[]> {
     return new Promise((resolve, reject) => {
       const results: Record<string, string>[] = [];
@@ -29,27 +26,22 @@ export class CsvService {
     });
   }
 
-  /**
-   * Items CSV Import with Partial Success Engine
-   */
   static async importItems(buffer: Buffer) {
     const records = await this.parseCsvBuffer(buffer);
     const results: RowImportResult[] = [];
     let importedCount = 0;
     let failedCount = 0;
 
-    // Cache categories for fast lookup
     const categories = await prisma.category.findMany();
-    const categoryMap = new Map<string, string>(); // lowercase name -> id
+    const categoryMap = new Map<string, string>();
     categories.forEach((cat) => categoryMap.set(cat.name.toLowerCase().trim(), cat.id));
 
-    // Cache existing SKUs
     const existingItems = await prisma.item.findMany({ select: { sku: true } });
     const existingSkus = new Set<string>(existingItems.map((i) => i.sku.toUpperCase().trim()));
 
     for (let i = 0; i < records.length; i++) {
       const row = records[i];
-      const rowNumber = i + 2; // +1 for 0-index, +1 for header line
+      const rowNumber = i + 2;
       const rawSku = row.SKU || row.sku || row['Item Code'] || '';
       const sku = rawSku.trim().toUpperCase();
       const name = (row.Name || row.name || row['Item Name'] || '').trim();
@@ -86,14 +78,12 @@ export class CsvService {
       let categoryId = categoryMap.get(categoryName.toLowerCase());
       if (!categoryId) {
         if (categoryName.length > 0) {
-          // Auto-create category if missing
           const newCat = await prisma.category.create({
             data: { name: categoryName, description: 'Created via CSV Import' },
           });
           categoryMap.set(categoryName.toLowerCase(), newCat.id);
           categoryId = newCat.id;
         } else {
-          // Use default General category
           let generalCat = categoryMap.get('general');
           if (!generalCat) {
             const newCat = await prisma.category.create({
@@ -146,9 +136,6 @@ export class CsvService {
     };
   }
 
-  /**
-   * Stock Receipts CSV Import with Partial Success Engine
-   */
   static async importReceipts(buffer: Buffer, userId: string) {
     const records = await this.parseCsvBuffer(buffer);
     const results: RowImportResult[] = [];
@@ -156,7 +143,7 @@ export class CsvService {
     let failedCount = 0;
 
     const items = await prisma.item.findMany({ select: { id: true, sku: true, status: true } });
-    const itemMap = new Map<string, { id: string; status: ItemStatus }>();
+    const itemMap = new Map<string, { id: string; status: string }>();
     items.forEach((item) => itemMap.set(item.sku.toUpperCase().trim(), { id: item.id, status: item.status }));
 
     const locations = await prisma.location.findMany({ select: { id: true, name: true, code: true, isActive: true } });
@@ -244,9 +231,6 @@ export class CsvService {
     };
   }
 
-  /**
-   * Export Live Inventory matrix to CSV
-   */
   static async exportInventoryCsv(): Promise<string> {
     const items = await prisma.item.findMany({
       include: {

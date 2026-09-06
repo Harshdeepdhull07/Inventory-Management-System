@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma.js';
 import { LedgerService } from '../services/ledgerService.js';
-import { ItemStatus, MovementType } from '@prisma/client';
+import { ItemStatus, MovementType } from '../types/enums.js';
 
 export const getDashboardStats = async (_req: Request, res: Response): Promise<void> => {
   const now = new Date();
@@ -9,7 +9,6 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const eightWeeksAgo = new Date(now.getTime() - 56 * 24 * 60 * 60 * 1000);
 
-  // 1. Basic Counts
   const [activeItemsCount, todayMovementsCount] = await Promise.all([
     prisma.item.count({ where: { status: ItemStatus.ACTIVE } }),
     prisma.stockMovement.count({
@@ -19,7 +18,6 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
     }),
   ]);
 
-  // 2. Items moved this week
   const weeklyMovements = await prisma.stockMovement.findMany({
     where: { createdAt: { gte: sevenDaysAgo } },
     select: { itemId: true },
@@ -27,7 +25,6 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
   });
   const itemsMovedThisWeekCount = weeklyMovements.length;
 
-  // 3. Low stock calculation across all active items
   const activeItems = await prisma.item.findMany({
     where: { status: ItemStatus.ACTIVE },
     include: { category: true },
@@ -55,7 +52,6 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
     stock,
   }));
 
-  // 4. Stock by Location
   const locations = await prisma.location.findMany({
     where: { isActive: true },
     select: { id: true, name: true, code: true },
@@ -77,7 +73,6 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
     })
   );
 
-  // 5. Last 8 Weeks Receipt & Issue Trends
   const historicalMovements = await prisma.stockMovement.findMany({
     where: {
       createdAt: { gte: eightWeeksAgo },
@@ -90,11 +85,9 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
     },
   });
 
-  // Aggregate into 8 weekly buckets
   const weeklyTrendsMap = new Map<string, { weekLabel: string; receipts: number; issues: number }>();
   for (let w = 7; w >= 0; w--) {
     const weekStart = new Date(now.getTime() - (w + 1) * 7 * 24 * 60 * 60 * 1000);
-    const weekEnd = new Date(now.getTime() - w * 7 * 24 * 60 * 60 * 1000);
     const label = `Wk ${8 - w} (${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
     weeklyTrendsMap.set(label, { weekLabel: label, receipts: 0, issues: 0 });
   }
@@ -116,7 +109,6 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
 
   const weeklyTrends = Array.from(weeklyTrendsMap.values());
 
-  // 6. Recent activity feed (latest 5 movements)
   const recentMovements = await prisma.stockMovement.findMany({
     take: 6,
     orderBy: { createdAt: 'desc' },

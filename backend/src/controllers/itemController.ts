@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../utils/prisma.js';
 import { LedgerService } from '../services/ledgerService.js';
-import { ItemStatus, Prisma } from '@prisma/client';
+import { ItemStatus } from '../types/enums.js';
+import { Prisma } from '@prisma/client';
 
 const itemSchema = z.object({
   sku: z.string().min(1, 'SKU is required'),
@@ -30,11 +31,10 @@ export const listInventory = async (req: Request, res: Response): Promise<void> 
   const limitNum = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
   const skip = (pageNum - 1) * limitNum;
 
-  // Build where conditions
   const where: Prisma.ItemWhereInput = {};
 
   if (status !== 'ALL') {
-    where.status = status as ItemStatus;
+    where.status = status;
   }
 
   if (categoryId) {
@@ -43,13 +43,12 @@ export const listInventory = async (req: Request, res: Response): Promise<void> 
 
   if (search) {
     where.OR = [
-      { sku: { contains: search, mode: 'insensitive' } },
-      { name: { contains: search, mode: 'insensitive' } },
-      { description: { contains: search, mode: 'insensitive' } },
+      { sku: { contains: search } },
+      { name: { contains: search } },
+      { description: { contains: search } },
     ];
   }
 
-  // Fetch candidate items
   const allMatchingItems = await prisma.item.findMany({
     where,
     include: {
@@ -67,7 +66,6 @@ export const listInventory = async (req: Request, res: Response): Promise<void> 
         : { name: sortOrder === 'desc' ? 'desc' : 'asc' },
   });
 
-  // Calculate live dynamic stock for all items
   const itemsWithStock = await Promise.all(
     allMatchingItems.map(async (item) => {
       let stock = 0;
@@ -86,13 +84,11 @@ export const listInventory = async (req: Request, res: Response): Promise<void> 
     })
   );
 
-  // Filter low stock if requested
   let filteredItems = itemsWithStock;
   if (lowStockOnly === 'true') {
     filteredItems = filteredItems.filter((i) => i.isLowStock);
   }
 
-  // Sort by calculated stock if requested
   if (sortBy === 'totalStock' || sortBy === 'stock' || sortBy === 'currentStock') {
     filteredItems.sort((a, b) =>
       sortOrder === 'desc' ? b.currentStock - a.currentStock : a.currentStock - b.currentStock
@@ -193,7 +189,6 @@ export const updateItem = async (req: Request, res: Response): Promise<void> => 
     },
   });
 
-  // Re-evaluate alerts
   const totalStock = await LedgerService.getItemTotalStock(id);
   const isLowStock = totalStock <= item.reorderLevel;
 
@@ -262,14 +257,13 @@ export const getItemTimeline = async (req: Request, res: Response): Promise<void
     orderBy: { createdAt: 'asc' },
   });
 
-  // Calculate cumulative running balance for timeline
   let runningTotalBalance = 0;
   const timeline = movements.map((m) => {
     let delta = 0;
     if (m.type === 'RECEIPT') delta = m.quantity;
     else if (m.type === 'ISSUE') delta = -m.quantity;
     else if (m.type === 'ADJUSTMENT') delta = m.quantity;
-    else if (m.type === 'TRANSFER') delta = 0; // Globally net 0, but location shifted
+    else if (m.type === 'TRANSFER') delta = 0;
 
     runningTotalBalance += delta;
 
@@ -280,7 +274,6 @@ export const getItemTimeline = async (req: Request, res: Response): Promise<void
     };
   });
 
-  // Reverse to show most recent first
   timeline.reverse();
 
   res.status(200).json({
