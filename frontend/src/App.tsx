@@ -18,8 +18,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin text-sky-400" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }

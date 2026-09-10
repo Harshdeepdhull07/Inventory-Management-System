@@ -139,8 +139,8 @@ export const Inventory: React.FC = () => {
     <div className="space-y-6 pb-12">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Inventory Matrix</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Inventory Matrix</h1>
+          <p className="text-sm text-slate-500">
             Catalog view with real-time append-only stock calculations
           </p>
         </div>
@@ -151,7 +151,7 @@ export const Inventory: React.FC = () => {
                 setEditingItem(null);
                 setItemModalOpen(true);
               }}
-              className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-lg text-sm flex items-center space-x-2 transition-colors shadow-lg shadow-sky-600/20"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm flex items-center space-x-2 transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span>Add New Item</span>
@@ -160,7 +160,7 @@ export const Inventory: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-4 space-y-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-4 shadow-xs">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="relative md:col-span-2">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -172,7 +172,7 @@ export const Inventory: React.FC = () => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500"
+              className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
             />
           </div>
 
@@ -183,7 +183,7 @@ export const Inventory: React.FC = () => {
                 setSelectedCategory(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500"
+              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
             >
               <option value="">All Categories</option>
               {categories.map((c) => (
@@ -201,7 +201,7 @@ export const Inventory: React.FC = () => {
                 setSelectedLocation(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500"
+              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
             >
               <option value="">All Locations Combined</option>
               {locations.map((l) => (
@@ -213,9 +213,9 @@ export const Inventory: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-700/60">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
           <div className="flex items-center space-x-2">
-            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Status:</span>
+            <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Status:</span>
             {['ACTIVE', 'ARCHIVED', 'ALL'].map((s) => (
               <button
                 key={s}
@@ -223,10 +223,10 @@ export const Inventory: React.FC = () => {
                   setStatus(s);
                   setPage(1);
                 }}
-                className={`px-2.5 py-1 rounded text-xs font-semibold uppercase transition-colors ${
+                className={`px-3 py-1 rounded-md text-xs font-bold uppercase transition-all ${
                   status === s
-                    ? 'bg-sky-500 text-white shadow-sm'
-                    : 'bg-slate-700/50 text-slate-400 hover:text-slate-200'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
                 }`}
               >
                 {s}
@@ -234,7 +234,7 @@ export const Inventory: React.FC = () => {
             ))}
           </div>
 
-          <label className="flex items-center space-x-2 cursor-pointer select-none text-xs font-semibold text-slate-300">
+          <label className="flex items-center space-x-2 cursor-pointer select-none text-xs font-semibold text-slate-700">
             <input
               type="checkbox"
               checked={lowStockOnly}
@@ -242,82 +242,82 @@ export const Inventory: React.FC = () => {
                 setLowStockOnly(e.target.checked);
                 setPage(1);
               }}
-              className="rounded border-slate-700 text-amber-500 focus:ring-amber-400 w-4 h-4"
+              className="rounded border-slate-300 text-amber-600 focus:ring-amber-500 w-4 h-4"
             />
-            <span className="text-amber-400 flex items-center space-x-1">
-              <AlertTriangle className="w-3.5 h-3.5" />
+            <span className="text-amber-700 flex items-center space-x-1 font-bold">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
               <span>Show Low Stock Only</span>
             </span>
           </label>
         </div>
       </div>
 
-      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-700/80 bg-slate-900/50">
+            <thead className="text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-200 bg-slate-50/80">
               <tr>
                 <th
                   onClick={() => handleSort('sku')}
-                  className="py-3 px-4 cursor-pointer hover:text-slate-100"
+                  className="py-3 px-4 cursor-pointer hover:text-slate-900"
                 >
                   <div className="flex items-center space-x-1">
                     <span>SKU</span>
-                    <ArrowUpDown className="w-3 h-3" />
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
                 <th
                   onClick={() => handleSort('name')}
-                  className="py-3 px-4 cursor-pointer hover:text-slate-100"
+                  className="py-3 px-4 cursor-pointer hover:text-slate-900"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Item Name</span>
-                    <ArrowUpDown className="w-3 h-3" />
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
                 <th
                   onClick={() => handleSort('category')}
-                  className="py-3 px-4 cursor-pointer hover:text-slate-100"
+                  className="py-3 px-4 cursor-pointer hover:text-slate-900"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Category</span>
-                    <ArrowUpDown className="w-3 h-3" />
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
                 <th
                   onClick={() => handleSort('currentStock')}
-                  className="py-3 px-4 cursor-pointer hover:text-slate-100 text-right"
+                  className="py-3 px-4 cursor-pointer hover:text-slate-900 text-right"
                 >
                   <div className="flex items-center justify-end space-x-1">
                     <span>Current Stock</span>
-                    <ArrowUpDown className="w-3 h-3" />
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
                 <th
                   onClick={() => handleSort('reorderLevel')}
-                  className="py-3 px-4 cursor-pointer hover:text-slate-100 text-right"
+                  className="py-3 px-4 cursor-pointer hover:text-slate-900 text-right"
                 >
                   <div className="flex items-center justify-end space-x-1">
                     <span>Reorder Level</span>
-                    <ArrowUpDown className="w-3 h-3" />
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
                 <th className="py-3 px-4 text-center">Status</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-sky-400 mb-2" />
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-600 mb-2" />
                     <span>Calculating ledger balances...</span>
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    <PackageX className="w-10 h-10 mx-auto text-slate-500 mb-2" />
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                    <PackageX className="w-10 h-10 mx-auto text-slate-400 mb-2" />
                     <span>No inventory items found matching your filters.</span>
                   </td>
                 </tr>
@@ -329,25 +329,25 @@ export const Inventory: React.FC = () => {
                   return (
                     <tr
                       key={item.id}
-                      className={`hover:bg-slate-700/30 transition-colors ${
-                        isArchived ? 'opacity-60 bg-slate-900/40' : ''
+                      className={`hover:bg-slate-50/80 transition-colors ${
+                        isArchived ? 'opacity-60 bg-slate-50/50' : ''
                       }`}
                     >
-                      <td className="py-3 px-4 font-mono text-xs font-bold text-sky-400">
+                      <td className="py-3 px-4 font-mono text-xs font-bold text-blue-600">
                         <Link to={`/items/${item.id}`} className="hover:underline">
                           {item.sku}
                         </Link>
                       </td>
                       <td className="py-3 px-4">
-                        <Link to={`/items/${item.id}`} className="font-semibold text-slate-200 hover:text-sky-300">
+                        <Link to={`/items/${item.id}`} className="font-semibold text-slate-900 hover:text-blue-600">
                           {item.name}
                         </Link>
                         {item.description && (
-                          <div className="text-xs text-slate-400 truncate max-w-xs">{item.description}</div>
+                          <div className="text-xs text-slate-500 truncate max-w-xs">{item.description}</div>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-xs text-slate-300">
-                        <span className="px-2 py-0.5 rounded bg-slate-700/60 border border-slate-600/60">
+                      <td className="py-3 px-4 text-xs">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-medium">
                           {item.category?.name}
                         </span>
                       </td>
@@ -355,38 +355,38 @@ export const Inventory: React.FC = () => {
                         <div className="flex items-center justify-end space-x-1.5">
                           {isLow && (
                             <span title="Stock at or below reorder level">
-                              <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse" />
+                              <AlertTriangle className="w-4 h-4 text-amber-500 animate-pulse" />
                             </span>
                           )}
                           <span
                             className={`font-mono text-base font-extrabold ${
-                              isLow ? 'text-amber-400' : 'text-emerald-400'
+                              isLow ? 'text-amber-600' : 'text-slate-900'
                             }`}
                           >
                             {item.currentStock ?? 0}
                           </span>
-                          <span className="text-xs text-slate-400">{item.unit}</span>
+                          <span className="text-xs text-slate-500">{item.unit}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-right font-mono text-xs text-slate-300">
+                      <td className="py-3 px-4 text-right font-mono text-xs text-slate-600">
                         {item.reorderLevel} {item.unit}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span
                           className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider ${
                             item.status === 'ACTIVE'
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                              : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200'
                           }`}
                         >
                           {item.status}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end space-x-1.5">
+                        <div className="flex items-center justify-end space-x-1">
                           <Link
                             to={`/items/${item.id}`}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-sky-400 hover:bg-slate-700/50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-100 transition-colors"
                             title="View Immutable Audit Timeline"
                           >
                             <History className="w-4 h-4" />
@@ -399,7 +399,7 @@ export const Inventory: React.FC = () => {
                                   setTargetItemId(item.id);
                                   setReceiptModalOpen(true);
                                 }}
-                                className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-950/40 transition-colors"
+                                className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
                                 title="Receive Stock"
                               >
                                 <ArrowDownToLine className="w-4 h-4" />
@@ -409,7 +409,7 @@ export const Inventory: React.FC = () => {
                                   setTargetItemId(item.id);
                                   setIssueModalOpen(true);
                                 }}
-                                className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-950/40 transition-colors"
+                                className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
                                 title="Issue Stock"
                               >
                                 <ArrowUpFromLine className="w-4 h-4" />
@@ -419,7 +419,7 @@ export const Inventory: React.FC = () => {
                                   setTargetItemId(item.id);
                                   setTransferModalOpen(true);
                                 }}
-                                className="p-1.5 rounded-lg text-indigo-400 hover:bg-indigo-950/40 transition-colors"
+                                className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors"
                                 title="Transfer Stock"
                               >
                                 <Repeat className="w-4 h-4" />
@@ -435,7 +435,7 @@ export const Inventory: React.FC = () => {
                                     setTargetItemId(item.id);
                                     setAdjustmentModalOpen(true);
                                   }}
-                                  className="p-1.5 rounded-lg text-amber-400 hover:bg-amber-950/40 transition-colors"
+                                  className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
                                   title="Stock Adjustment (Manager)"
                                 >
                                   <Sliders className="w-4 h-4" />
@@ -446,7 +446,7 @@ export const Inventory: React.FC = () => {
                                   setEditingItem(item);
                                   setItemModalOpen(true);
                                 }}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-colors"
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
                                 title="Edit Item Details"
                               >
                                 <Edit className="w-4 h-4" />
@@ -454,7 +454,7 @@ export const Inventory: React.FC = () => {
                               {item.status === 'ACTIVE' ? (
                                 <button
                                   onClick={() => handleArchive(item.id)}
-                                  className="p-1.5 rounded-lg text-rose-400/80 hover:text-rose-400 hover:bg-rose-950/40 transition-colors"
+                                  className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
                                   title="Archive Item (Soft-delete)"
                                 >
                                   <Archive className="w-4 h-4" />
@@ -462,7 +462,7 @@ export const Inventory: React.FC = () => {
                               ) : (
                                 <button
                                   onClick={() => handleRestore(item.id)}
-                                  className="p-1.5 rounded-lg text-emerald-400/80 hover:text-emerald-400 hover:bg-emerald-950/40 transition-colors"
+                                  className="p-1.5 rounded-lg text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
                                   title="Restore Item"
                                 >
                                   <RotateCcw className="w-4 h-4" />
@@ -480,27 +480,27 @@ export const Inventory: React.FC = () => {
           </table>
         </div>
 
-        <div className="px-6 py-3 border-t border-slate-700/80 bg-slate-900/40 flex items-center justify-between text-xs text-slate-400">
+        <div className="px-6 py-3 border-t border-slate-200 bg-slate-50/80 flex items-center justify-between text-xs text-slate-500">
           <div>
-            Showing <span className="font-semibold text-slate-200">{items.length}</span> of{' '}
-            <span className="font-semibold text-slate-200">{pagination.totalCount}</span> items
+            Showing <span className="font-semibold text-slate-800">{items.length}</span> of{' '}
+            <span className="font-semibold text-slate-800">{pagination.totalCount}</span> items
           </div>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 font-medium rounded border border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
             >
               Previous
             </button>
             <span>
-              Page <span className="font-semibold text-slate-200">{pagination.currentPage}</span> of{' '}
-              <span className="font-semibold text-slate-200">{pagination.totalPages}</span>
+              Page <span className="font-semibold text-slate-800">{pagination.currentPage}</span> of{' '}
+              <span className="font-semibold text-slate-800">{pagination.totalPages}</span>
             </span>
             <button
               onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
               disabled={page >= pagination.totalPages}
-              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 font-medium rounded border border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
             >
               Next
             </button>
@@ -551,3 +551,4 @@ export const Inventory: React.FC = () => {
     </div>
   );
 };
+

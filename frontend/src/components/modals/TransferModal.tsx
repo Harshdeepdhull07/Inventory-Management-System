@@ -137,16 +137,16 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between bg-slate-800/80">
-          <div className="flex items-center space-x-2 text-indigo-400 font-bold">
-            <Repeat className="w-5 h-5" />
-            <span>Atomic Stock Transfer</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-indigo-50/50">
+          <div className="flex items-center space-x-2 text-indigo-700 font-bold">
+            <Repeat className="w-5 h-5 text-indigo-600" />
+            <span className="text-slate-900 font-semibold">Atomic Stock Transfer</span>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-700/50"
+            className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -154,19 +154,19 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-rose-950/50 border border-rose-800/80 rounded-lg text-rose-300 text-sm">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-              Select Item <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              Select Item <span className="text-rose-500">*</span>
             </label>
             <select
               value={selectedItemId}
               onChange={(e) => setSelectedItemId(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
               required
             >
               <option value="">-- Choose item to transfer --</option>
@@ -180,13 +180,13 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-                From (Source) <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                From (Source) <span className="text-rose-500">*</span>
               </label>
               <select
                 value={selectedSourceId}
                 onChange={(e) => setSelectedSourceId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
                 required
               >
                 <option value="">-- Select Source --</option>
@@ -199,13 +199,13 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-                To (Destination) <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                To (Destination) <span className="text-rose-500">*</span>
               </label>
               <select
                 value={selectedDestId}
                 onChange={(e) => setSelectedDestId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
                 required
               >
                 <option value="">-- Select Dest --</option>
@@ -221,10 +221,10 @@ export const TransferModal: React.FC<TransferModalProps> = ({
           </div>
 
           {sourceStock !== null && (
-            <div className={`p-2 rounded-lg text-xs font-medium border flex items-center justify-between ${
+            <div className={`p-2.5 rounded-xl text-xs font-medium border flex items-center justify-between ${
               sourceStock > 0
-                ? 'bg-indigo-950/40 border-indigo-800/60 text-indigo-300'
-                : 'bg-rose-950/40 border-rose-800/60 text-rose-300'
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-800'
+                : 'bg-rose-50 border-rose-200 text-rose-800'
             }`}>
               <span>Available at Source:</span>
               <span className="font-bold text-sm">{sourceStock} units</span>
@@ -232,8 +232,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({
           )}
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-              Quantity to Transfer <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              Quantity to Transfer <span className="text-rose-500">*</span>
             </label>
             <input
               type="number"
@@ -241,13 +241,13 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               max={sourceStock !== null ? sourceStock : undefined}
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
               Transfer Manifest / Reference
             </label>
             <input
@@ -255,12 +255,12 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               placeholder="e.g. TR-2026-9102"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
               Transfer Notes
             </label>
             <textarea
@@ -268,7 +268,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               placeholder="Courier tracking, transport truck ID, reason for replenishment..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-colors"
             />
           </div>
 
@@ -276,14 +276,14 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 text-sm font-medium transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || (sourceStock !== null && sourceStock < 1)}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold flex items-center space-x-2 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center space-x-2 transition-colors disabled:opacity-50 shadow-xs"
             >
               {loading ? (
                 <>

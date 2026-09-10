@@ -26,7 +26,7 @@ Fill this in and commit it. This is the first file we open.
 
 | Layer | What you used | Why |
 |-------|---------------|-----|
-| **Frontend** | React 18, Vite, TypeScript, Tailwind CSS, Recharts, Lucide Icons | Fast bundle performance, responsive dark UI, dynamic visual analytics, and strict type safety |
+| **Frontend** | React 18, Vite, TypeScript, Tailwind CSS, Recharts, Lucide Icons | Fast bundle performance, modern light enterprise ERP UI, dynamic visual analytics, and strict type safety |
 | **Backend** | Node.js, Express, TypeScript, Prisma ORM, JWT, bcryptjs, Zod, fast-csv | High-throughput asynchronous I/O, typed ORM queries, robust schema validation, and streaming CSV |
 | **Database** | PostgreSQL / SQLite (via Prisma) | ACID transactional consistency for atomic stock transfers, foreign key referential integrity |
 | **Hosting** | Vercel (Frontend) + Render (Backend) + Supabase (PostgreSQL) | Reliable free-tier cloud deployment architecture with automatic CI/CD |

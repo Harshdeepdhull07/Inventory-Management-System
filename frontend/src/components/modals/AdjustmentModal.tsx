@@ -126,43 +126,43 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-slate-800 border border-amber-600/50 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between bg-amber-950/20">
-          <div className="flex items-center space-x-2 text-amber-400 font-bold">
-            <Sliders className="w-5 h-5" />
-            <span>Stock Adjustment (Manager Only)</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-amber-50/50">
+          <div className="flex items-center space-x-2 text-amber-800 font-bold">
+            <Sliders className="w-5 h-5 text-amber-600" />
+            <span className="text-slate-900 font-semibold">Stock Adjustment (Manager Only)</span>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-700/50"
+            className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="p-2.5 bg-amber-950/30 border border-amber-800/40 rounded-lg text-amber-300/90 text-xs flex items-start space-x-2">
-            <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-start space-x-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <span>
               Adjustments append directly to the immutable stock ledger with a permanent audit record and reason.
             </span>
           </div>
 
           {error && (
-            <div className="p-3 bg-rose-950/50 border border-rose-800/80 rounded-lg text-rose-300 text-sm">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-              Select Item <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              Select Item <span className="text-rose-500">*</span>
             </label>
             <select
               value={selectedItemId}
               onChange={(e) => setSelectedItemId(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-colors"
               required
             >
               <option value="">-- Choose item to adjust --</option>
@@ -175,13 +175,13 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-              Location <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              Location <span className="text-rose-500">*</span>
             </label>
             <select
               value={selectedLocationId}
               onChange={(e) => setSelectedLocationId(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-colors"
               required
             >
               <option value="">-- Choose location --</option>
@@ -194,28 +194,28 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
           </div>
 
           {currentStock !== null && (
-            <div className="p-2 bg-slate-900/60 rounded-lg text-xs font-medium border border-slate-700 flex items-center justify-between text-slate-300">
+            <div className="p-2.5 bg-slate-50 rounded-xl text-xs font-medium border border-slate-200 flex items-center justify-between text-slate-700">
               <span>Current Stock at Location:</span>
-              <span className="font-bold text-sm text-slate-100">{currentStock} units</span>
+              <span className="font-bold text-sm text-slate-900">{currentStock} units</span>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-              Adjustment Delta (+ or -) <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              Adjustment Delta (+ or -) <span className="text-rose-500">*</span>
             </label>
             <input
               type="number"
               placeholder="e.g. +5 or -2"
               value={deltaQuantity}
               onChange={(e) => setDeltaQuantity(parseInt(e.target.value, 10) || 0)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500 font-mono"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 font-mono transition-colors"
               required
             />
             {currentStock !== null && deltaQuantity !== 0 && (
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-[11px] text-slate-500 mt-1">
                 Projected New Balance:{' '}
-                <span className={`font-bold ${currentStock + deltaQuantity < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                <span className={`font-bold ${currentStock + deltaQuantity < 0 ? 'text-rose-600' : 'text-emerald-700'}`}>
                   {currentStock + deltaQuantity} units
                 </span>
               </p>
@@ -223,7 +223,7 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
               Audit Reference / Ticket ID
             </label>
             <input
@@ -231,20 +231,20 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
               placeholder="e.g. AUDIT-2026-Q3-01"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-              Mandatory Reason / Notes <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              Mandatory Reason / Notes <span className="text-rose-500">*</span>
             </label>
             <textarea
               rows={2}
               placeholder="Physical count discrepancy, damaged write-off, unrecorded return..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-colors"
               required
             />
           </div>
@@ -253,14 +253,14 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 text-sm font-medium transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || deltaQuantity === 0}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold flex items-center space-x-2 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-semibold flex items-center space-x-2 transition-colors disabled:opacity-50 shadow-xs"
             >
               {loading ? (
                 <>
