@@ -23,6 +23,16 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root Endpoint
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'BUSY Inventory & Stock Control API is online',
+    healthCheck: '/api/health',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health Check
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -42,7 +52,7 @@ app.use('/api/alerts', alertRoutes);
 app.use(errorHandler);
 
 const PORT = config.port || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Inventory Server running on port ${PORT} [${config.nodeEnv}]`);
 });
 
