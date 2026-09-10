@@ -4,7 +4,7 @@ Fill this in and commit it. This is the first file we open.
 
 ## Links
 
-- **GitHub repository:** https://github.com/sahilyadav/busy-inventory-system
+- **GitHub repository:** https://github.com/Harshdeepdhull07/Inventory-Management-System
 - **Live application:** https://busy-inventory-system.vercel.app
 
 ## Notes for the reviewer

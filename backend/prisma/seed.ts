@@ -24,7 +24,7 @@ async function main() {
     data: {
       email: 'manager@inventory.com',
       password: passwordHash,
-      name: 'Sahil Yadav (Inventory Manager)',
+      name: 'Harshdeep (Inventory Manager)',
       role: Role.MANAGER,
     },
   });
