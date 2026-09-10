@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import process from 'node:process';
 import { Role, MovementType, ItemStatus } from '../src/types/enums.js';
 
 const prisma = new PrismaClient();
