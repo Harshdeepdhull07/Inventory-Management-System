@@ -8,9 +8,8 @@ import { Role } from '../types/enums.js';
 
 const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
-  name: z.string().min(2),
-  role: z.enum(['MANAGER', 'STAFF']).default('STAFF'),
+  password: z.string().min(6, 'Password must be at least 6 characters long'),
+  name: z.string().min(2, 'Name must be at least 2 characters long'),
 });
 
 const loginSchema = z.object({
@@ -19,9 +18,9 @@ const loginSchema = z.object({
 });
 
 export const register = async (req: Request, res: Response): Promise<void> => {
-  const { email, password, name, role } = registerSchema.parse(req.body);
+  const { email, password, name } = registerSchema.parse(req.body);
 
-  const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
   if (existing) {
     res.status(409).json({ success: false, message: 'Email is already registered.' });
     return;
@@ -30,10 +29,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   const hashedPassword = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
     data: {
-      email: email.toLowerCase(),
+      email: email.toLowerCase().trim(),
       password: hashedPassword,
-      name,
-      role,
+      name: name.trim(),
+      role: Role.STAFF, // Strictly normal-user permissions; managers must be promoted/assigned internally
     },
     select: {
       id: true,

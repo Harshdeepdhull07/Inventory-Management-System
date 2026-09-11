@@ -5,30 +5,42 @@ import { useAuth } from '../context/AuthContext.js';
 import { Boxes, ShieldCheck, UserCheck, Loader2, AlertCircle } from 'lucide-react';
 
 export const Login: React.FC = () => {
+  const [isRegister, setIsRegister] = useState<boolean>(false);
+  const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('manager@inventory.com');
   const [password, setPassword] = useState<string>('Manager@123');
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      await login(email, password);
+      if (isRegister) {
+        if (!name.trim()) {
+          setError('Please provide your full name.');
+          setLoading(false);
+          return;
+        }
+        await register(name, email, password);
+      } else {
+        await login(email, password);
+      }
       navigate('/');
     } catch (err: any) {
-      console.error('Login error details:', err);
+      console.error('Auth error details:', err);
       const serverMessage = err.response?.data?.message;
       if (serverMessage) {
         setError(serverMessage);
       } else if (err.message) {
-        setError(`${err.message} — Target: ${api.defaults.baseURL}/auth/login`);
+        const action = isRegister ? 'register' : 'login';
+        setError(`${err.message} — Target: ${api.defaults.baseURL}/auth/${action}`);
       } else {
-        setError('Login failed. Please check network connection and credentials.');
+        setError('Authentication failed. Please check network connection and credentials.');
       }
     } finally {
       setLoading(false);
@@ -36,6 +48,7 @@ export const Login: React.FC = () => {
   };
 
   const setDemoCredentials = (role: 'manager' | 'staff' | 'staff2') => {
+    setIsRegister(false);
     if (role === 'manager') {
       setEmail('manager@inventory.com');
       setPassword('Manager@123');
@@ -54,7 +67,7 @@ export const Login: React.FC = () => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-xl p-8 relative z-10">
-        <div className="flex flex-col items-center text-center mb-8">
+        <div className="flex flex-col items-center text-center mb-6">
           <div className="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 mb-4">
             <Boxes className="w-8 h-8" />
           </div>
@@ -66,6 +79,42 @@ export const Login: React.FC = () => {
           </p>
         </div>
 
+        {/* Tab switch between Sign In and Register */}
+        <div className="flex rounded-xl bg-slate-100 p-1 mb-6">
+          <button
+            type="button"
+            onClick={() => {
+              setIsRegister(false);
+              setError('');
+            }}
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+              !isRegister
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsRegister(true);
+              setError('');
+              if (email === 'manager@inventory.com') {
+                setEmail('');
+                setPassword('');
+              }
+            }}
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+              isRegister
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            Create Account
+          </button>
+        </div>
+
         {error && (
           <div className="mb-6 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm flex items-start space-x-2">
             <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600 mt-0.5" />
@@ -73,7 +122,23 @@ export const Login: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {isRegister && (
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-colors"
+                placeholder="e.g. Jane Doe"
+                required
+              />
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
               Email Address
@@ -97,10 +162,17 @@ export const Login: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-colors"
-              placeholder="••••••••"
+              placeholder={isRegister ? 'At least 6 characters' : '••••••••'}
+              minLength={isRegister ? 6 : 1}
               required
             />
           </div>
+
+          {isRegister && (
+            <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-2.5">
+              🔒 <strong>Standard Access:</strong> New accounts are immediately active with standard staff permissions (view inventory, movements, ledger timeline). Managers retain administrative control.
+            </p>
+          )}
 
           <button
             type="submit"
@@ -110,38 +182,40 @@ export const Login: React.FC = () => {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Signing In...</span>
+                <span>{isRegister ? 'Creating Account...' : 'Signing In...'}</span>
               </>
             ) : (
-              <span>Sign In to System</span>
+              <span>{isRegister ? 'Create Account & Sign In' : 'Sign In to System'}</span>
             )}
           </button>
         </form>
 
-        {/* 1-Click Demo Logins */}
-        <div className="mt-8 pt-6 border-t border-slate-100">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 text-center">
-            Quick 1-Click Demo Accounts
+        {/* 1-Click Demo Logins (Only shown on Sign In) */}
+        {!isRegister && (
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 text-center">
+              Quick 1-Click Demo Accounts
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDemoCredentials('manager')}
+                className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors"
+              >
+                <ShieldCheck className="w-4 h-4 text-amber-600" />
+                <span>Manager Role</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDemoCredentials('staff')}
+                className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors"
+              >
+                <UserCheck className="w-4 h-4 text-emerald-600" />
+                <span>Warehouse Staff</span>
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={() => setDemoCredentials('manager')}
-              className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors"
-            >
-              <ShieldCheck className="w-4 h-4 text-amber-600" />
-              <span>Manager Role</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setDemoCredentials('staff')}
-              className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors"
-            >
-              <UserCheck className="w-4 h-4 text-emerald-600" />
-              <span>Warehouse Staff</span>
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

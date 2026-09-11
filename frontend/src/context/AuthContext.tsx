@@ -9,6 +9,7 @@ interface AuthContextType {
   isManager: boolean;
   isStaff: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -56,6 +57,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const register = async (name: string, email: string, password: string) => {
+    const res = await api.post('/auth/register', { name, email, password });
+    if (res.data.success) {
+      const { user: userData, token: jwtToken } = res.data.data;
+      setUser(userData);
+      setToken(jwtToken);
+      localStorage.setItem('token', jwtToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -75,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isManager,
         isStaff,
         login,
+        register,
         logout,
         refreshUser,
       }}
