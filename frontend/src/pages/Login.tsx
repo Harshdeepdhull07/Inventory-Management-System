@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.js';
 import { Boxes, ShieldCheck, UserCheck, Loader2, AlertCircle } from 'lucide-react';
 
@@ -20,7 +21,15 @@ export const Login: React.FC = () => {
       await login(email, password);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please check credentials.');
+      console.error('Login error details:', err);
+      const serverMessage = err.response?.data?.message;
+      if (serverMessage) {
+        setError(serverMessage);
+      } else if (err.message) {
+        setError(`${err.message} — Target: ${api.defaults.baseURL}/auth/login`);
+      } else {
+        setError('Login failed. Please check network connection and credentials.');
+      }
     } finally {
       setLoading(false);
     }
